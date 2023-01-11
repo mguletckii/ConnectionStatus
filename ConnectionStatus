@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if nc -v -w3 $1 $2 2>&1 | grep succeeded -c &> /dev/null
+then
+	if [[ $4 = "Modem" ]]
+	then
+		level=`curl http://$1:8080/cgi-bin/radiostatus`
+		echo "insert into $8 values ('$3','$1','$4','OK','$level') on duplicate key update status='OK', level='$level'" | mysql -u$5 -p$6 -h$9 $7
+	else
+		echo "insert into $8 values ('$3','$1','$4','OK',NULL) on duplicate key update status='OK', level=NULL" | mysql -u$5 -p$6 -h$9 $7
+	fi
+else 
+	if [[ $4 = "PLC" ]]
+	then
+		echo "insert into $8 values ('$3','$1','$4','BAD',NULL) on duplicate key update status='FAIL', level='0'" | mysql -u$5 -p$6 -h$9 $7
+	else
+		echo "insert into $8 values ('$3','$1','$4','BAD',NULL) on duplicate key update status='FAIL', level=NULL" | mysql -u$5 -p$6 -h$9 $7
+	fi
+fi
+
+exit 0
